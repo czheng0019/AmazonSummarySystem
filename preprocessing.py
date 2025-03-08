@@ -6,6 +6,8 @@ import re
 import pandas as pd
 from nltk.corpus import stopwords
 
+nltk.download('punkt_tab')
+nltk.download('averaged_perceptron_tagger_eng')
 nltk.download('stopwords')
 
 reviews_filename = "./data/Appliances.jsonl"
@@ -37,9 +39,18 @@ def process_text(line):
     line = line.translate(str.maketrans("", "", punctuations)) # remove punctuation
     line = re.sub(r'\d+', '', line) # remove numbers
     words = [word for word in line.split() if word not in stop_words] # filter out stop words
-    return ' '.join(words)
+    return ' '.join(words)    
 
 combined_df['text'] = combined_df['text'].swifter.apply(process_text)
+combined_df['product name'] = combined_df['product name'].swifter.apply(process_text)
 
+is_noun = lambda pos: pos[:2] == 'NN'
+
+def extract_nouns(line):
+    tokenized = nltk.word_tokenize(line)
+    nouns = [word for (word, pos) in nltk.pos_tag(tokenized) if is_noun(pos)] 
+    return ' '.join(nouns)
+
+combined_df['product name'] = combined_df['product name'].swifter.apply(extract_nouns)
 print(combined_df.head())
 combined_df.to_csv("./data/processed_data.csv", index=False)
