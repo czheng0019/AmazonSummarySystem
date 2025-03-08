@@ -5,8 +5,8 @@ reviews_data = []
 with open(reviews_filename, "r") as ratings:
     for line in ratings:
         row = json.loads(line)
-        reviews_data.append([row['rating'], row['title'], row['text'], row['parent_asin']])
-reviews_df = pd.DataFrame(reviews_data, columns=["rating", 'title', 'text', 'parent_asin'])
+        reviews_data.append([row['rating'], row['title'] + ' ' + row['text'], row['parent_asin']])
+reviews_df = pd.DataFrame(reviews_data, columns=["rating", 'text', 'parent_asin'])
 reviews_df['parent_asin'] = reviews_df['parent_asin'].astype(str)
 print(reviews_df.head(), reviews_df.dtypes)
 meta_data = []
