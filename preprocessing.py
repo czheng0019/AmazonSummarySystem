@@ -53,4 +53,4 @@ def extract_nouns(line):
 
 combined_df['product name'] = combined_df['product name'].swifter.apply(extract_nouns)
 print(combined_df.head())
-combined_df.to_csv("./data/processed_data.csv", index=False)
+combined_df.to_csv("./data/processed_data_nouns.csv", index=False)
