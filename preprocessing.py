@@ -5,15 +5,20 @@ import swifter
 import re
 import pandas as pd
 from nltk.corpus import stopwords
+import requests
+import gzip
+import io
 
+# fetching data set
+url = "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/review_categories/Appliances.jsonl.gz"
+response = requests.get(url)
 nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger_eng')
 nltk.download('stopwords')
 
-reviews_filename = "./data/Appliances.jsonl"
-reviews_data = []
-with open(reviews_filename, "r") as ratings:
-    for line in ratings:
+with gzip.open(io.BytesIO(response.content), 'rt') as f:
+    reviews_data = []
+    for line in f:
         row = json.loads(line)
         reviews_data.append([row['rating'], row['title'] + ' ' + row['text'], row['parent_asin']])
 reviews_df = pd.DataFrame(reviews_data, columns=["rating", 'text', 'parent_asin'])
