@@ -55,6 +55,7 @@ class ProductNames():
                 text = row[1]
                 if not isinstance(text, str):
                     continue
+                print(text)
                 seen_words = set()
                 for word in text.split():
                     if word not in seen_words:
@@ -64,7 +65,7 @@ class ProductNames():
             average_score_one = []
             average_score_five = []
             for word in word_to_scores:
-                avg_score = word_to_scores[word]/len(word_to_num_reviews[word])
+                avg_score = word_to_scores[word]/word_to_num_reviews[word]
                 if avg_score < 1.5:
                     average_score_one.append(word)
                 elif avg_score > 4.5:
