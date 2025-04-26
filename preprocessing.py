@@ -9,9 +9,9 @@ import requests
 import gzip
 import io
 
-# fetching data set
-url = "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/review_categories/Appliances.jsonl.gz"
-response = requests.get(url)
+# fetching data sets
+appliances_url = "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/review_categories/Appliances.jsonl.gz"
+response = requests.get(appliances_url)
 nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger_eng')
 nltk.download('stopwords')
@@ -24,10 +24,13 @@ with gzip.open(io.BytesIO(response.content), 'rt') as f:
 reviews_df = pd.DataFrame(reviews_data, columns=["rating", 'text', 'parent_asin'])
 reviews_df['parent_asin'] = reviews_df['parent_asin'].astype(str)
 print(reviews_df.head(), reviews_df.dtypes)
+
 meta_data = []
-meta_filename = "./data/meta_Appliances.jsonl"
-with open(meta_filename) as meta_info:
-    for line in meta_info:
+meta_url = "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/meta_categories/meta_Appliances.jsonl.gz"
+response = requests.get(meta_url)
+with gzip.open(io.BytesIO(response.content), 'rt') as f:
+    meta_data = []
+    for line in f:
         row = json.loads(line)
         meta_data.append([row['title'], row['parent_asin']])
 meta_df = pd.DataFrame(meta_data, columns=['product name', 'parent_asin'], dtype="str")
@@ -55,6 +58,8 @@ def extract_nouns(line):
     tokenized = nltk.word_tokenize(line)
     nouns = [word for (word, pos) in nltk.pos_tag(tokenized) if is_noun(pos)] 
     return ' '.join(nouns)
+
+
 
 combined_df['product name'] = combined_df['product name'].swifter.apply(extract_nouns)
 print(combined_df.head())
