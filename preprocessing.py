@@ -34,7 +34,7 @@ meta_df = pd.DataFrame(meta_data, columns=['product name', 'parent_asin'], dtype
 print(meta_df.head(), meta_df.dtypes)
 combined_df = reviews_df.join(meta_df.set_index('parent_asin'), on="parent_asin", how='inner')
 
-punctuations = "'\"\,<>./?@#$%^&*_~/!()-[]{};:"
+punctuations = """'"\\,<>./?@#$%^&*_~/!()-[]{};:"""
 stop_words = set(stopwords.words('english'))
 
 def process_text(line):
@@ -42,8 +42,8 @@ def process_text(line):
     line = re.sub(r"<.*?>", "", line) # remove html
     line = line.strip().lower() # remove excess whitespace and make lowercase
     line = line.translate(str.maketrans("", "", punctuations)) # remove punctuation
-    line = re.sub(r'\d+', '', line) # remove numbers
-    words = [word for word in line.split() if word not in stop_words] # filter out stop words
+    #line = re.sub(r'\d+', '', line) # remove numbers
+    words = [word for word in line.split() if word not in stop_words and word.isalpha()] # filter out stop words
     return ' '.join(words)    
 
 combined_df['text'] = combined_df['text'].swifter.apply(process_text)
