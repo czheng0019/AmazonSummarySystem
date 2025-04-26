@@ -1,7 +1,10 @@
 import pandas as pd 
 import time
+from nltk.stem import PorterStemmer
+
 class ProductNames():
     def __init__(self, datafile):
+        self.stemmer = PorterStemmer()
         data = pd.read_csv(datafile, header=0)
         unfiltered_product_names = pd.unique(data['product name']).astype(str)
         #print(unfiltered_product_names)
@@ -24,10 +27,14 @@ class ProductNames():
         self.most_common_product_words = set(top_500)
         self.filtered_product_names = []
         for product_name in unfiltered_product_names:
+            seen_words = set()
             filtered_words = []
             for word in product_name.split():
-                if word in self.most_common_product_words:
-                    filtered_words.append(word)
+                if len(word) > 2 and word in self.most_common_product_words:
+                    stem = self.stemmer.stem(word)
+                    if stem not in seen_words:
+                        filtered_words.append(word)
+                        seen_words.add(stem)
             self.filtered_product_names.append(' '.join(filtered_words))
 if __name__ == "__main__":
     start_time = time.time()
