@@ -1,8 +1,9 @@
 import pandas as pd 
 import time
 from nltk.stem import PorterStemmer
+import pickle
 
-class ProductNames():
+class Clusterer():
     def __init__(self, datafile):
         self.stemmer = PorterStemmer()
         data = pd.read_csv(datafile, header=0)
@@ -55,7 +56,7 @@ class ProductNames():
                 text = row[1]
                 if not isinstance(text, str):
                     continue
-                print(text)
+           #     print(text)
                 seen_words = set()
                 for word in text.split():
                     if word not in seen_words:
@@ -72,18 +73,22 @@ class ProductNames():
                     average_score_five.append(word)
             product_name_clusters[product_name] = [average_score_one, average_score_five]
         self.product_name_clusters = product_name_clusters
-        
+    def save_clusters(self, filename):
+        with open(filename, 'w+b') as save_file:
+            pickle.dump(self.product_name_clusters, save_file)
+            pickle.dump(self.filtered_dataset, save_file)
 
 if __name__ == "__main__":
     start_time = time.time()
-    final_product_names = ProductNames("./data/processed_data_nouns.csv")
+    clusterer = Clusterer("./data/processed_data_nouns.csv")
     end_time = time.time()
     print("time taken to build vocab", end_time - start_time)
-    print(final_product_names.filtered_product_names[:10])
-    print(final_product_names.filtered_product_names[-10:])
-    print(len(final_product_names.filtered_product_names), len(set(final_product_names.filtered_product_names)))
-    print(final_product_names.filtered_dataset.head())
+    print(clusterer.filtered_product_names[:10])
+    print(clusterer.filtered_product_names[-10:])
+    print(len(clusterer.filtered_product_names), len(set(clusterer.filtered_product_names)))
+    print(clusterer.filtered_dataset.head())
     start_time = time.time()
-    final_product_names.create_clusters()
+    clusterer.create_clusters()
     end_time = time.time()
     print("time taken to cluster", end_time - start_time)
+    clusterer.save_clusters("clusterer_state.pkl")
