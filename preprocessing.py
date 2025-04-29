@@ -59,8 +59,6 @@ def extract_nouns(line):
     nouns = [word for (word, pos) in nltk.pos_tag(tokenized) if is_noun(pos)] 
     return ' '.join(nouns)
 
-
-
 combined_df['product name'] = combined_df['product name'].swifter.apply(extract_nouns)
 print(combined_df.head())
 combined_df.to_csv("./data/processed_data_nouns.csv", index=False)
