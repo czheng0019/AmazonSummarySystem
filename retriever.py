@@ -12,8 +12,8 @@ class ImportantWords():
         """
         Class will have following state:
             product_name_clusters: from Clusterer,
-                map from product name to 2 lists: 1st list is list of words that appeared in ratings averaging >4.5 while 
-                2nd list is list of words that appeared in ratings averaging <1.5
+                map from product name to 2 lists: 1st list is list of words that appeared in ratings averaging <1.5 while
+                2nd list is list of words that appeared in ratings averaging >4.5
             product_names: list of filtered/processed product names from clusterer. Note: each product name will be a document
             w2v_model: pre-trained Word2Vec model
             product_name_representation: map from product name to average of word2vec embeddings of embedding for each word vector in document/product name
@@ -25,7 +25,7 @@ class ImportantWords():
             self.product_name_clusters = pickle.load(data_file)
             filtered_dataset = pickle.load(data_file)
             self.product_names = list(set(filtered_dataset['product name'].astype('str').to_list()))
-        self.w2v_model = gensim.downloader.load('word2vec-google-news-300')
+        self.w2v_model = gensim.downloader.load('fasttext-wiki-news-subwords-300')
         self.product_name_representation = {}
         for product_name in self.product_names:
             embeddings = []
@@ -37,6 +37,9 @@ class ImportantWords():
             if len(embeddings) > 0:
                 all_embeddings = np.array(embeddings)
                 self.product_name_representation[product_name] = all_embeddings
+        with open("product_names.txt", "w") as file:
+            for name in self.product_name_representation.keys():
+                file.write(name+"\n")
 
     def process_text(self, line):
         line = html.unescape(line)
@@ -75,7 +78,7 @@ class ImportantWords():
             ind = indices_for_5_best_docs[i]
             product_name = self.product_names[ind]
             print("Relevant product name", product_name)
-            good_words, bad_words = self.product_name_clusters[product_name]
+            bad_words, good_words = self.product_name_clusters[product_name]
             words_for_good_reviews.update(good_words)
             words_for_bad_reviews.update(bad_words)
         return words_for_good_reviews, words_for_bad_reviews
