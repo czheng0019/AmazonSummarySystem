@@ -72,7 +72,8 @@ class ImportantWords():
         words_for_good_reviews = set()
         words_for_bad_reviews = set()
         for i in range(indices_for_5_best_docs.shape[0]):
-            product_name = self.product_names[i]
+            ind = indices_for_5_best_docs[i]
+            product_name = self.product_names[ind]
             print("Relevant product name", product_name)
             good_words, bad_words = self.product_name_clusters[product_name]
             words_for_good_reviews.update(good_words)
