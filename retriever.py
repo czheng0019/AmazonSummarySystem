@@ -49,9 +49,8 @@ class ImportantWords():
         with open("product_names.txt", "w") as file:
             for name in self.product_name_representation.keys():
                 file.write(name+"\n")
-            file.write("---\n")
-            for noun in self.nouns:
-                file.write(noun+"\n")
+        #Explicitly filter out common relation terms since many reviews are my __ loved/hated/liked/etc this product
+        self.common_words = set(["parent", "mother", "father", "brother", "sister", "wife", "husband", "boyfriend", "girlfriend", "son", "daughter", "niece", "nephew", "cousin", "uncle", "aunt", "grandpa", "grandma", "grandmother", "grandfather"])
     def process_text(self, line):
         line = html.unescape(line)
         line = re.sub(r"<.*?>", "", line) # remove html
@@ -108,9 +107,8 @@ class ImportantWords():
         final_bad_words = []
         good_words_seen = set()
         for score in sorted(list(words_for_good_reviews.keys()), reverse=True):
-            print(words_for_good_reviews[score])
             for word in words_for_good_reviews[score]:
-                if word not in good_words_seen and len(final_good_words) < 10:
+                if word not in good_words_seen and word not in self.common_words and len(final_good_words) < 10:
                     final_good_words.append(word)
                     good_words_seen.add(word)
                 elif len(final_good_words) == 10:
@@ -119,9 +117,8 @@ class ImportantWords():
                 break
         bad_words_seen = set()
         for score in sorted(list(words_for_bad_reviews.keys()), reverse=True):
-            print(words_for_bad_reviews[score])
             for word in words_for_bad_reviews[score]:
-                if word not in bad_words_seen and len(final_bad_words) < 10:
+                if word not in bad_words_seen and word not in self.common_words and len(final_bad_words) < 10:
                     final_bad_words.append(word)
                     bad_words_seen.add(word)
                 elif len(final_bad_words) == 10:
