@@ -47,8 +47,11 @@ class Clusterer():
                         filtered_words.append(word)
                         seen_words.add(stem)
             filtered_product_name = ' '.join(filtered_words)
-            unfiltered_to_filtered_mapping[product_name] = filtered_product_name
-            self.filtered_product_names.append(filtered_product_name)
+            if filtered_product_name != "nan" and len(filtered_product_name) > 0:
+                unfiltered_to_filtered_mapping[product_name] = filtered_product_name
+                self.filtered_product_names.append(filtered_product_name)
+            elif filtered_product_name == "nan":
+                print(filtered_product_name)
 
         # replace product names in the dataset with the filtered ones
         data["product name"] = data["product name"].map(unfiltered_to_filtered_mapping)
@@ -56,7 +59,7 @@ class Clusterer():
 
     def create_clusters(self):
         # identify unique product names after filtering
-        unique_product_names = pd.unique(self.filtered_dataset['product name'])
+        unique_product_names = pd.unique(self.filtered_dataset['product name']).astype(str)
         data = self.filtered_dataset
         product_name_clusters = {}
         
@@ -72,8 +75,8 @@ class Clusterer():
                 text = row[1]
                 if not isinstance(text, str): # skip invalid text entries
                     continue
-
-                seen_words = set()
+                #Disallow words stars, five, one, star since these occur when reviews saying one star or five stars
+                seen_words = set(["stars", "five", "one", "star"])
                 for word in text.split():
                     if word not in seen_words:
                         word_to_scores[word] = word_to_scores.get(word, 0)+rating
@@ -85,10 +88,10 @@ class Clusterer():
             average_score_five = []
             for word in word_to_scores:
                 avg_score = word_to_scores[word]/word_to_num_reviews[word]
-                if avg_score < 1.5:
-                    average_score_one.append(word)
-                elif avg_score > 4.5:
-                    average_score_five.append(word)
+                if avg_score < 1.5 and word_to_num_reviews[word] > 4:
+                    average_score_one.append((word, avg_score))
+                elif avg_score > 4.8 and word_to_num_reviews[word] > 4:
+                    average_score_five.append((word,avg_score))
             # cluster each product name
             product_name_clusters[product_name] = [average_score_one, average_score_five]
         self.product_name_clusters = product_name_clusters

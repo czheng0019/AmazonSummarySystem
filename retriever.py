@@ -1,7 +1,7 @@
 import numpy as np
 import nltk
 import pandas as pd
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
 import gensim.downloader
 import html
 import re
@@ -18,14 +18,22 @@ class ImportantWords():
             w2v_model: pre-trained Word2Vec model
             product_name_representation: map from product name to average of word2vec embeddings of embedding for each word vector in document/product name
         """
-        nltk.download('stopwords')
+        try:
+            nltk.find("corpora/stopwords")
+        except:
+            nltk.download('stopwords')
+        try:
+            nltk.data.find("corpora/wordnet")
+        except LookupError:
+            nltk.download('wordnet')
         self.stop_words = stopwords.words('english')
         self.punctuations = """'"\\,<>./?@#$%^&*_~/!()-[]{};:"""
         with open(clusters_file, 'rb') as data_file:
             self.product_name_clusters = pickle.load(data_file)
+            self.product_name_clusters = {str(prod_name_int):clusters for prod_name_int, clusters in self.product_name_clusters.items()}
             filtered_dataset = pickle.load(data_file)
             self.product_names = list(set(filtered_dataset['product name'].astype('str').to_list()))
-        self.w2v_model = gensim.downloader.load('fasttext-wiki-news-subwords-300')
+        self.w2v_model = gensim.downloader.load('glove-wiki-gigaword-300')#('fasttext-wiki-news-subwords-300')
         self.product_name_representation = {}
         for product_name in self.product_names:
             embeddings = []
@@ -37,10 +45,13 @@ class ImportantWords():
             if len(embeddings) > 0:
                 all_embeddings = np.array(embeddings)
                 self.product_name_representation[product_name] = all_embeddings
+        self.nouns = {synset.name().split('.',1)[0] for synset in wordnet.all_synsets('n')}
         with open("product_names.txt", "w") as file:
             for name in self.product_name_representation.keys():
                 file.write(name+"\n")
-
+            file.write("---\n")
+            for noun in self.nouns:
+                file.write(noun+"\n")
     def process_text(self, line):
         line = html.unescape(line)
         line = re.sub(r"<.*?>", "", line) # remove html
@@ -72,21 +83,58 @@ class ImportantWords():
                 relevance = np.sum(query_doc_rel)
                 relevances[i] = relevance
         indices_for_5_best_docs = np.argsort(relevances)[-5:]
-        words_for_good_reviews = set()
-        words_for_bad_reviews = set()
+        words_for_good_reviews = {}
+        words_for_bad_reviews = {}
         for i in range(indices_for_5_best_docs.shape[0]):
             ind = indices_for_5_best_docs[i]
             product_name = self.product_names[ind]
             print("Relevant product name", product_name)
             bad_words, good_words = self.product_name_clusters[product_name]
-            words_for_good_reviews.update(good_words)
-            words_for_bad_reviews.update(bad_words)
-        return words_for_good_reviews, words_for_bad_reviews
+            for i in range(len(good_words)):
+                word, score = good_words[i]
+                if word in self.w2v_model and word in self.nouns:
+                    if score in words_for_good_reviews:
+                        words_for_good_reviews[score].append(word)
+                    else:
+                        words_for_good_reviews[score] = [word]
+            for i in range(len(bad_words)):
+                word, score = bad_words[i]
+                if word in self.w2v_model and word in self.nouns:
+                    if score in words_for_bad_reviews:
+                        words_for_bad_reviews[score].append(word)
+                    else:
+                        words_for_bad_reviews[score] = [word]
+        final_good_words = []
+        final_bad_words = []
+        good_words_seen = set()
+        for score in sorted(list(words_for_good_reviews.keys()), reverse=True):
+            print(words_for_good_reviews[score])
+            for word in words_for_good_reviews[score]:
+                if word not in good_words_seen and len(final_good_words) < 10:
+                    final_good_words.append(word)
+                    good_words_seen.add(word)
+                elif len(final_good_words) == 10:
+                    break
+            if len(final_good_words) == 10:
+                break
+        bad_words_seen = set()
+        for score in sorted(list(words_for_bad_reviews.keys()), reverse=True):
+            print(words_for_bad_reviews[score])
+            for word in words_for_bad_reviews[score]:
+                if word not in bad_words_seen and len(final_bad_words) < 10:
+                    final_bad_words.append(word)
+                    bad_words_seen.add(word)
+                elif len(final_bad_words) == 10:
+                    break
+            if len(final_bad_words) == 10:
+                break
+            
+        return final_good_words, final_bad_words
     
 if __name__=="__main__":
-    word_retriever = ImportantWords("clusterer_state.pkl")
+    word_retriever = ImportantWords("clusterer_state_1_2_4_8_score.pkl")
     while True:
-        query = input("Enter appliance product to get terms to look out for: ")
+        query = input("Enter appliance product to get terms to look out for(CTRL+C to exit program): ")
         good_terms, bad_terms = word_retriever.search(query)
         if good_terms is None:
             print("This query is invalid. The appliance product does not exist")
