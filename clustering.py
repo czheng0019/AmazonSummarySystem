@@ -77,6 +77,7 @@ class Clusterer():
                     continue
                 #Disallow words stars, five, one, star since these occur when reviews saying one star or five stars
                 seen_words = set(["stars", "five", "one", "star"])
+                #For each word, update running sum of ratings words has been a part of with new rating
                 for word in text.split():
                     if word not in seen_words:
                         word_to_scores[word] = word_to_scores.get(word, 0)+rating
@@ -87,9 +88,12 @@ class Clusterer():
             average_score_one = []
             average_score_five = []
             for word in word_to_scores:
+                #Average score calculated by sum of ratings of all reviews word appeared in / number of reviews with word
                 avg_score = word_to_scores[word]/word_to_num_reviews[word]
+                #Words that appeared in at least 5 reviews and have an average score <1.5 indicate bad product
                 if avg_score < 1.5 and word_to_num_reviews[word] > 4:
                     average_score_one.append((word, avg_score))
+                #Words that appeared in at least 5 reviews and have an average score >4.8 indicate good product
                 elif avg_score > 4.8 and word_to_num_reviews[word] > 4:
                     average_score_five.append((word,avg_score))
             # cluster each product name

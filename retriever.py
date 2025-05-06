@@ -95,8 +95,10 @@ class ImportantWords():
             product_name = self.product_names[i]
             if product_name in self.product_name_representation:
                 product_name_emb = self.product_name_representation[product_name]
-                query_word_doc_rel = query_embedding @ product_name_emb.T # for cosine similarity
+                query_word_doc_rel = query_embedding @ product_name_emb.T # for dot product similarity
+                #Average over all document words
                 query_doc_rel = query_word_doc_rel.mean(axis=1)
+                #Sum over similarity for each word in query
                 relevance = np.sum(query_doc_rel)
                 relevances[i] = relevance
 
@@ -160,7 +162,7 @@ class ImportantWords():
     
 # prompt for users to enter product names
 if __name__=="__main__":
-    word_retriever = ImportantWords("clusterer_state_1_2_4_8_score.pkl")
+    word_retriever = ImportantWords("clusterer_state.pkl")
     while True:
         query = input("Enter appliance product to get terms to look out for(CTRL+C to exit program): ")
         good_terms, bad_terms = word_retriever.search(query)
