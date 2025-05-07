@@ -169,7 +169,6 @@ if __name__=="__main__":
         if good_terms is None:
             print("This query is invalid. The appliance product does not exist")
         else:
-            input()
             print("Terms associated with a good product:")
             print(good_terms)
             print("Terms associated with a bad product:")
