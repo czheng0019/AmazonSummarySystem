@@ -148,7 +148,7 @@ class ImportantWords():
         # find the top 10 bad words and break when 10 are found
         final_bad_words = []
         bad_words_seen = set()
-        for score in sorted(list(words_for_bad_reviews.keys()), reverse=True):
+        for score in sorted(list(words_for_bad_reviews.keys())):
             for word in words_for_bad_reviews[score]:
                 if word not in bad_words_seen and word not in self.common_words and len(final_bad_words) < 10:
                     final_bad_words.append(word)
