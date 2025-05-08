@@ -27,7 +27,7 @@ with gzip.open(io.BytesIO(response.content), 'rt') as f:
 # convert the review data into a dataframe
 reviews_df = pd.DataFrame(reviews_data, columns=["rating", 'text', 'parent_asin'])
 reviews_df['parent_asin'] = reviews_df['parent_asin'].astype(str)
-print(reviews_df.head(), reviews_df.dtypes)
+#print(reviews_df.head(), reviews_df.dtypes)
 
 meta_data = []
 meta_url = "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/meta_categories/meta_Appliances.jsonl.gz" # fetching meta data set
@@ -42,7 +42,7 @@ with gzip.open(io.BytesIO(response.content), 'rt') as f:
 
 # convert the meta data into a dataframe
 meta_df = pd.DataFrame(meta_data, columns=['product name', 'parent_asin'], dtype="str")
-print(meta_df.head(), meta_df.dtypes)
+#print(meta_df.head(), meta_df.dtypes)
 combined_df = reviews_df.join(meta_df.set_index('parent_asin'), on="parent_asin", how='inner')
 
 punctuations = """'"\\,<>./?@#$%^&*_~/!()-[]{};:""" # punctuation to be removed
@@ -70,5 +70,5 @@ def extract_nouns(line):
     return ' '.join(nouns)
 
 combined_df['product name'] = combined_df['product name'].swifter.apply(extract_nouns) # apply noun extraction to product name column
-print(combined_df.head())
+#print(combined_df.head())
 combined_df.to_csv("./data/processed_data_nouns.csv", index=False) # save to csv
